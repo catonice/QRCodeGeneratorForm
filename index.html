@@ -1,17 +1,19 @@
 <!DOCTYPE html>
-<html manifest="manifest.mf">
+<html lang="en">
 
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=Utf-8">
-    <script type="text/javascript" src="scripts/qrcode.js"></script>
-    <script type="text/javascript" src="scripts/jquery-3.5.1.min.js"></script>
-    <link rel="stylesheet" type="text/css" href="bootstrap/css/bootstrap.css">
+    <script type="text/javascript" src="./scripts/qrcode.js"></script>
+    <script type="text/javascript" src="./scripts/jquery-3.5.1.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="./bootstrap/css/bootstrap.css">
     </link>
-    <link rel="stylesheet" type="text/css" href="bootstrap/css/bootstrap.min.css">
+    <link rel="stylesheet" type="text/css" href="./bootstrap/css/bootstrap.min.css">
     </link>
-    <script src="bootstrap/js/bootstrap.js"></script>
-    <script src="bootstrap/js/bootstrap.min.js"></script>
-
+    <script src="./bootstrap/js/bootstrap.js"></script>
+    <script src="./bootstrap/js/bootstrap.min.js"></script>
+    <script src="./scripts/index.js"></script>
+    <link rel="manifest" href="./manifest.webmanifest">
+    <link>
     <title>QR Code Generator for JavaScript</title>
 </head>
 
@@ -48,66 +50,66 @@
                     </div>
                 </form>
                 <button class="btn btn-primary" onclick='makeQRCode();'> Generate QR Code</button>
+                <button class="btn btn-secondary" onclick='installPWA();'>Install QR App</button>
             </div>
         </div>
     </div>
 </body>
 <script>
-    window.onload = function () {
-        let json = localStorage.getItem("json");
+    let deferredPrompt = null;
 
-        json = JSON.parse(json);
-        if (json) {
-            $('#name').val(json.name);
-            $('#surname').val(json.surname);
-            $('#temp').val(json.temp);
-            $('#visitDate').val(json.visitDate);
-        }
-        var d = new Date();
-        var month = d.getMonth();
-        var month_actual = month + 1;
-
-        if (month_actual < 10) {
-            month_actual = "0" + month_actual;
-        }
-
-        var day_val = d.getDate();
-        if (day_val < 10) {
-            day_val = "0" + day_val;
-        }
-
-        let str = d.getFullYear() + "-" + month_actual + "-" + day_val;
-        $('#visitDate').val(str);
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', function () {
+            navigator.serviceWorker.register('./service-worker.js').then(function (registration) {
+                // Registration was successful
+                console.log('Registered!');
+            }, function (err) {
+                // registration failed :(
+                console.log('ServiceWorker registration failed: ', err);
+            }).catch(function (err) {
+                console.log(err);
+            });
+        });
+    } else {
+        console.log('service worker is not supported');
     }
 
-    function makeQRCode() {
-        var typeNumber = 0;
-        var errorCorrectionLevel = 'L';
-        var qr = qrcode(typeNumber, errorCorrectionLevel);
-
-        var name = $('#name').val();
-        var surname = $('#surname').val();
-        var temp = $('#temp').val();
-        var visitDate = $('#visitDate').val();
-
-        var json = {
-            'name': name,
-            'surname': surname,
-            'temp': temp,
-            'visitDate': visitDate
+    navigator.serviceWorker.ready.then(function (registration) {
+        if (!registration.pushManager) {
+            alert('No push notifications support.');
+            return false;
         }
+        //To subscribe `push notification` from push manager
+        registration.pushManager.subscribe({
+            userVisibleOnly: true //Always show notification when received
+        })
+            .then(function (subscription) {
+                console.log('Subscribed.');
+            })
+            .catch(function (error) {
+                console.log('Subscription error: ', error);
+            });
+    });
 
-        json = JSON.stringify(json);
-        visitDate = visitDate.replace(/-/gi, '/')
+    window.addEventListener('beforeinstallprompt', e => {
+        console.log('beforeinstallprompt Event fired');
+        e.preventDefault();
+        // Stash the event so it can be triggered later.
+        this.deferredPrompt = e;
+        return false;
+    });
 
-        var str = name + "|" + surname + "|" + temp + "|" + visitDate;
-
-        localStorage.setItem("json", json);
-
-        qr.addData(str);
-        qr.make();
-        document.getElementById('placeHolder').innerHTML = qr.createImgTag();
+    function installPWA() {
+        if (this.deferredPrompt) {
+            // When you want to trigger prompt:
+            this.deferredPrompt.prompt();
+            this.deferredPrompt.userChoice.then(choice => {
+                console.log(choice);
+            });
+            this.deferredPrompt = null;
+        }
     }
+
 </script>
 
 </html>
