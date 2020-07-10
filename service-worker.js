@@ -1,11 +1,54 @@
-self.addEventListener('install', function () {
+const cacheName = "QR-Code-Gen";
+const staticAssets = [
+    './',
+    './index.html',
+    './scripts/qrcode.js',
+    './scripts/index.js',
+    './scripts/jquery-3.5.1.min.js',
+    './bootstrap/css/bootstrap.min.css',
+    './bootstrap/js/bootstrap.min.js',
+    './manifest.webmanifest'
+]
+
+self.addEventListener('install', async e => {
     console.log('Install!');
+    const cache = await caches.open(cacheName);
+    await cache.addAll(staticAssets);
+    return self.skipWaiting();
 });
+
 self.addEventListener("activate", event => {
     console.log('Activate!');
-});
-self.addEventListener('fetch', function (event) {
-    console.log('Fetch!', event.request);
+    self.clients.claim(); // Service running app immediately
 });
 
+self.addEventListener('fetch', async e => {
+    console.log('Fetch!', e.request);
 
+    const req = e.request;
+    const url = new URL(req.url);
+
+    if (url.origin === location.origin) {
+        e.respondWith(cacheFirst(req));
+    } else {
+        e.respondWith(networkAndCache(req));
+    }
+});
+
+async function cacheFirst(req) {
+    const cache = await caches.open(cacheName);
+    const cached = await cache.match(req);
+    return cached || fetch(req);
+}
+
+async function networkAndCache(req) {
+    const cache = await caches.open(cacheName)
+    try {
+        const fresh = await fetch(req);
+        await cache.put(req, fresh.clone());
+        return fresh;
+    } catch (e) {
+        const cached = await cache.match(req);
+        return cached;
+    }
+}
