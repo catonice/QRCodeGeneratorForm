@@ -1,4 +1,4 @@
-<!doctype html>
+<!DOCTYPE html>
 <html manifest="manifest.mf">
 
 <head>
@@ -9,8 +9,6 @@
     </link>
     <link rel="stylesheet" type="text/css" href="bootstrap/css/bootstrap.min.css">
     </link>
-    <link rel="stylesheet" type="text/css" href="bootstrap/css/bootstrap.css.map">
-    </link>
     <script src="bootstrap/js/bootstrap.js"></script>
     <script src="bootstrap/js/bootstrap.min.js"></script>
 
@@ -18,9 +16,15 @@
 </head>
 
 <body>
-    <div class="container">
+    <div class="" style="display: flex; align-items: center; justify-content: center; min-height: 100vh;">
         <div class="row">
-            <div class="col-md-6">
+            <div class="col-md-12"
+                style="min-height: 200px; border: 2px #007bff solid; border-radius: 5px; margin-bottom: 5px;">
+                <div id="placeHolder" style="display: flex; align-items: center; justify-content: center;">
+
+                </div>
+            </div>
+            <div class="col-md-12">
                 <form>
                     <div class="form-row">
                         <div class="form-group col-md-6">
@@ -32,35 +36,50 @@
                             <input type="text" class="form-control" id="surname" placeholder="">
                         </div>
                     </div>
-                </form>
-                <button class="btn btn-primary" onclick='makeQRCode();'> Generate QR Code</button>
-            </div>
-            <div class="col-md-6">
-                <div id="placeHolder">
-
-                </div>
-            </div>
-        </div>
-        <div class="row" style="padding: 15px"></div>
-        <div class="row">
-            <div class="col-md-6">
-                <form>
                     <div class="form-row">
                         <div class="form-group col-md-6">
-                            <label for="name2">First Name 2</label>
-                            <input type="text" class="form-control" id="name2" placeholder="">
+                            <label for="temp">Temperature</label>
+                            <input type="number" class="form-control" id="temp" value="36.5" step="0.1">
                         </div>
                         <div class="form-group col-md-6">
-                            <label for="surname2">Last Name 2</label>
-                            <input type="text" class="form-control" id="surname2" placeholder="">
+                            <label for="visitDate">Visit Date</label>
+                            <input type="date" class="form-control" id="visitDate" required>
                         </div>
                     </div>
                 </form>
+                <button class="btn btn-primary" onclick='makeQRCode();'> Generate QR Code</button>
             </div>
         </div>
     </div>
 </body>
 <script>
+    window.onload = function () {
+        let json = localStorage.getItem("json");
+
+        json = JSON.parse(json);
+        if (json) {
+            $('#name').val(json.name);
+            $('#surname').val(json.surname);
+            $('#temp').val(json.temp);
+            $('#visitDate').val(json.visitDate);
+        }
+        var d = new Date();
+        var month = d.getMonth();
+        var month_actual = month + 1;
+
+        if (month_actual < 10) {
+            month_actual = "0" + month_actual;
+        }
+
+        var day_val = d.getDate();
+        if (day_val < 10) {
+            day_val = "0" + day_val;
+        }
+
+        let str = d.getFullYear() + "-" + month_actual + "-" + day_val;
+        $('#visitDate').val(str);
+    }
+
     function makeQRCode() {
         var typeNumber = 0;
         var errorCorrectionLevel = 'L';
@@ -68,12 +87,24 @@
 
         var name = $('#name').val();
         var surname = $('#surname').val();
-        var obj = {
-            name: name,
-            surname: surname
+        var temp = $('#temp').val();
+        var visitDate = $('#visitDate').val();
+
+        var json = {
+            'name': name,
+            'surname': surname,
+            'temp': temp,
+            'visitDate': visitDate
         }
-        obj = JSON.stringify(obj);
-        qr.addData(obj);
+
+        json = JSON.stringify(json);
+        visitDate = visitDate.replace(/-/gi, '/')
+
+        var str = name + "|" + surname + "|" + temp + "|" + visitDate;
+
+        localStorage.setItem("json", json);
+
+        qr.addData(str);
         qr.make();
         document.getElementById('placeHolder').innerHTML = qr.createImgTag();
     }
