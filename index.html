@@ -1,0 +1,82 @@
+<!doctype html>
+<html>
+
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=Utf-8">
+    <script type="text/javascript" src="qrcode.js"></script>
+    <script type="text/javascript" src="jquery-3.5.1.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="bootstrap/css/bootstrap.css">
+    </link>
+    <link rel="stylesheet" type="text/css" href="bootstrap/css/bootstrap.min.css">
+    </link>
+    <link rel="stylesheet" type="text/css" href="bootstrap/css/bootstrap.css.map">
+    </link>
+    <script src="bootstrap/js/bootstrap.js"></script>
+    <script src="bootstrap/js/bootstrap.min.js"></script>
+
+    <title>QR Code Generator for JavaScript</title>
+</head>
+
+<body>
+    <div class="container">
+        <div class="row">
+            <div class="col-md-6">
+                <form>
+                    <div class="form-row">
+                        <div class="form-group col-md-6">
+                            <label for="name">First Name</label>
+                            <input type="text" class="form-control" id="name" placeholder="">
+                        </div>
+                        <div class="form-group col-md-6">
+                            <label for="surname">Last Name</label>
+                            <input type="text" class="form-control" id="surname" placeholder="">
+                        </div>
+                    </div>
+                </form>
+                <button class="btn btn-primary" onclick='makeQRCode();'> Generate QR Code</button>
+            </div>
+            <div class="col-md-6">
+                <div id="placeHolder" style="width: 150px; height: 150px;">
+
+                </div>
+            </div>
+        </div>
+        <div class="row" style="padding: 15px"></div>
+        <div class="row">
+            <div class="col-md-6">
+                <form>
+                    <div class="form-row">
+                        <div class="form-group col-md-6">
+                            <label for="name2">First Name 2</label>
+                            <input type="text" class="form-control" id="name2" placeholder="">
+                        </div>
+                        <div class="form-group col-md-6">
+                            <label for="surname2">Last Name 2</label>
+                            <input type="text" class="form-control" id="surname2" placeholder="">
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</body>
+<script>
+    function makeQRCode() {
+        var typeNumber = 0;
+        var errorCorrectionLevel = 'L';
+        var qr = qrcode(typeNumber, errorCorrectionLevel);
+
+        var name = $('#name').val();
+        var surname = $('#surname').val();
+        var obj = {
+            name: name,
+            surname: surname
+        }
+        obj = JSON.stringify(obj);
+        qr.addData(obj);
+        qr.make();
+        document.getElementById('placeHolder').innerHTML = qr.createImgTag();
+    }
+</script>
+
+</html>
